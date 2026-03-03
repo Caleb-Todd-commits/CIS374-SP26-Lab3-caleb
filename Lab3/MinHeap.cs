@@ -16,7 +16,13 @@ public class MinHeap<T> where T : IComparable<T>
 
     public MinHeap(T[] initialArray = null)
     {
-       
+       array = new T[initialSize];
+
+       if (initialArray == null) return;
+
+       foreach (var item in initialArray)
+        {
+            Add(item);
         }  
     }
 
@@ -26,6 +32,7 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public T Peek()
     {
+        return array[0];
     }
 
     // TODO
@@ -35,7 +42,15 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public void Add(T item)
     {
-        
+        array[Count] = item;
+        Count++;
+
+        TrickleUp(Count - 1);
+
+        if (Capacity == Count)
+        {
+            DoubleArrayCapacity();
+        }
     }
 
     public T Extract()
@@ -59,7 +74,19 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public T ExtractMin()
     {
-       
+       T min = array[0];
+
+        // swap with last
+        Swap(0, Count - 1);
+
+        // remove last
+        array[Count - 1] = default(T);
+        Count--;
+
+        // trickle down
+        TrickleDown(0);
+
+        return min;
     }
 
     /// <summary>
@@ -68,7 +95,15 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public bool Contains(T value)
     {
-      
+      for(int i = 0; i < Count; i++)
+        {
+            if (array[i].CompareTo(value) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // TODO
