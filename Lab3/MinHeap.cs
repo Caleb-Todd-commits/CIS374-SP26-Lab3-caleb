@@ -32,6 +32,11 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public T Peek()
     {
+        if (IsEmpty)
+        {
+            throw new InvalidOperationException();
+        }
+
         return array[0];
     }
 
@@ -42,15 +47,15 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public void Add(T item)
     {
+        if (Count == Capacity)
+        {
+            DoubleArrayCapacity();
+        }
+
         array[Count] = item;
         Count++;
 
         TrickleUp(Count - 1);
-
-        if (Capacity == Count)
-        {
-            DoubleArrayCapacity();
-        }
     }
 
     public T Extract()
@@ -64,7 +69,29 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public T ExtractMax()
     {
-        return default;
+        if (IsEmpty)
+        {
+            throw new InvalidOperationException();
+        }
+
+        int largest = 0;
+        for (int i = 1; i < Count; i++)
+        {
+            if (array[i].CompareTo(array[largest]) > 0)
+            {
+                largest = i;
+            }
+        }
+
+        T largestItem = array[largest];
+
+        Swap(largest, Count - 1);
+        array[Count - 1] = default(T);
+        Count--;
+
+        RestoreHeap(largest);
+
+        return largestItem;
     }
 
     // TODO
@@ -74,7 +101,12 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public T ExtractMin()
     {
-       T min = array[0];
+        if (IsEmpty)
+        {
+            throw new InvalidOperationException();
+        }
+
+        T min = array[0];
 
         // swap with last
         Swap(0, Count - 1);
@@ -84,7 +116,10 @@ public class MinHeap<T> where T : IComparable<T>
         Count--;
 
         // trickle down
-        TrickleDown(0);
+        if (!IsEmpty)
+        {
+            TrickleDown(0);
+        }
 
         return min;
     }
@@ -113,12 +148,14 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public void Update(T oldValue, T newValue)
     {
-        // find the node to update - O(n)
+        int index = FindIndexOf(oldValue);
+        if (index == -1)
+        {
+            throw new InvalidOperationException();
+        }
 
-        // update value - O(1)
-
-        // trickle up or trickle down - O( log(n) )
-
+        array[index] = newValue;
+        RestoreHeap(index);
     }
 
     // TODO
@@ -128,28 +165,78 @@ public class MinHeap<T> where T : IComparable<T>
     /// </summary>
     public void Remove(T value)
     {
-        // find the node to remove
+        int index = FindIndexOf(value);
+        if (index == -1)
+        {
+            throw new InvalidOperationException();
+        }
 
-        // swap with last
+        Swap(index, Count - 1);
+        array[Count - 1] = default(T);
+        Count--;
 
-        // trickleX
+        RestoreHeap(index);
+    }
 
-        // Count--
+    private int FindIndexOf(T value)
+    {
+        for (int i = 0; i < Count; i++)
+        {
+            if (array[i].CompareTo(value) == 0)
+            {
+                return i;
+            }
+        }
 
+        return -1;
     }
 
     // TODO
     // Time Complexity: O( log n )
     private void TrickleUp(int index)
     {
+        while (index > 0)
+        {
+            int parentIndex = Parent(index);
+            if (array[index].CompareTo(array[parentIndex]) < 0)
+            {
+                Swap(index, parentIndex);
+               index = parentIndex;
+            }
+            else
+            {
+                break;
+            }
 
+        }
     }
 
     // TODO
     // Time Complexity: O( log n )
     private void TrickleDown(int index)
     {
+        while (true)
+        {
+            int left = LeftChild(index);
+            int right = RightChild(index);
+            int smallest = index;
+            if (left < Count && array[left].CompareTo(array[smallest]) < 0)
+            {
+                smallest = left;
+            }
+            if (right < Count && array[right].CompareTo(array[smallest]) < 0)
+            {
+                smallest = right;
+            }
 
+            if (smallest == index)
+            {
+                return;
+            }
+
+            Swap(index, smallest);
+            index = smallest;
+        }
     }
 
     // TODO
@@ -190,5 +277,22 @@ public class MinHeap<T> where T : IComparable<T>
     private void DoubleArrayCapacity()
     {
         Array.Resize(ref array, array.Length * 2);
+    }
+
+    private void RestoreHeap(int index)
+    {
+        if (index < 0 || index >= Count)
+        {
+            return;
+        }
+
+        if (index > 0 && array[index].CompareTo(array[Parent(index)]) < 0)
+        {
+            TrickleUp(index);
+        }
+        else
+        {
+            TrickleDown(index);
+        }
     }
 }
